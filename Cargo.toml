@@ -1,0 +1,13 @@
+[package]
+name = "stringbuilder"
+version = "0.1.0"
+authors = ["pierzchalski <e.a.pierzchalski@gmail.com>"]
+
+[features]
+benchmarks = []
+
+[dependencies]
+
+[[example]]
+name = "use"
+path = "examples/use/main.rs"
