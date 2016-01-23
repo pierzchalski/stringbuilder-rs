@@ -1,6 +1,4 @@
-use ::sliceiterators::Skip;
-use ::sliceiterators::Reader;
-use ::sliceiterators::Insert;
+use ::sliceiterators::{Skip, Reader, Insert, Take};
 use ::std::io::Read;
 use ::std::slice;
 use ::std::iter;
@@ -17,12 +15,12 @@ impl Test {
     fn new(n_rows: usize, n_cols: usize) -> (Self, Vec<u8>) {
         let mut vself = vec![];
         let mut vflat = vec![];
-        let mut count = 0;
+        let mut count = 0usize;
         for _ in 0..n_rows {
             let mut row = vec![];
             for _ in 0..n_cols {
-                vflat.push(count);
-                row.push(count);
+                vflat.push(count as u8);
+                row.push(count as u8);
                 count += 1;
             }
             vself.push(row);
@@ -51,8 +49,8 @@ fn simple_skip() {
 
 #[test]
 fn big_simple_skip() {
-    let (test, flat) = Test::new(3, 3);
-    
+    let (test, flat) = Test::new(3, 10);
+
     for i in 0..flat.len() {
         let iter_flat: Vec<u8> = test.slices().flat_map(|slice| slice.iter().cloned()).skip(i).collect();
         let skip = test.slices();
@@ -60,6 +58,20 @@ fn big_simple_skip() {
         let expected: Vec<u8> = flat.iter().cloned().skip(i).collect();
         assert_eq!(iter_flat, expected);
         assert_eq!(skip, expected);
+    }
+}
+
+#[test]
+fn big_simple_take() {
+    let (test, flat) = Test::new(3, 4);
+
+    for i in 0..flat.len() {
+        let iter_flat: Vec<u8> = test.slices().flat_map(|slice| slice.iter().cloned()).take(i).collect();
+        let take = test.slices();
+        let take: Vec<u8> = Take::new(take, i).flat_map(|slice| slice.iter().cloned()).collect();
+        let expected: Vec<u8> = flat.iter().cloned().take(i).collect();
+        assert_eq!(iter_flat, expected);
+        assert_eq!(take, expected);
     }
 }
 
@@ -85,7 +97,7 @@ mod benchmarks {
     use super::Test;
 
     extern crate test;
-    
+
     const N_ROWS: usize = 300;
     const N_COLS: usize = 300;
     const SKIPS: usize = 107;
@@ -94,7 +106,7 @@ mod benchmarks {
     #[bench]
     fn slice_iter(b: &mut test::Bencher) {
         let (v, flat) = Test::new(N_ROWS, N_COLS);
-        
+
         b.iter(|| {
             for s in 0..SKIPS {
                 let skip = s * SKIP_DIFF;

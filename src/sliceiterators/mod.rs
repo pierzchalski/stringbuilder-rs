@@ -103,6 +103,44 @@ impl<I> Skip<I> {
     }
 }
 
+pub struct Take<I> {
+    iterator: I,
+    done: usize,
+    count: usize,
+}
+
+impl<'a, A: 'a, I> Iterator for Take<I> where
+    I: Iterator<Item=&'a [A]>,
+{
+    type Item = &'a [A];
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done >= self.count {
+            None
+        } else {
+            self.iterator.next().map(|next| {
+                self.done += next.len();
+                if self.done > self.count {
+                    let excess = self.done - self.count;
+                    let head_len = next.len() - excess;
+                    &next[0..head_len]
+                } else {
+                    next
+                }
+            })
+        }
+    }
+}
+
+impl<I> Take<I> {
+    pub fn new(iterator: I, count: usize) -> Self {
+        Take {
+            iterator: iterator,
+            count: count,
+            done: 0,
+        }
+    }
+}
+
 pub struct Reader<I: Iterator> {
     iterator: I,
     split: Option<I::Item>,
